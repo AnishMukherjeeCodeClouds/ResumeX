@@ -57,10 +57,7 @@ export const SignupReqDtoSchema = z
 
 export class SignupReqDto extends createZodDto(SignupReqDtoSchema) {}
 
-export const SignupResDtoSchema = SignupReqDtoSchema.pick({
-  username: true,
-  email: true,
-}).extend({
+export const SignupResDtoSchema = z.object({
   message: z.string(),
   accessToken: z.jwt(),
   statusCode: z.enum(HttpStatus),

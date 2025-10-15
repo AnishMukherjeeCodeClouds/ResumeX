@@ -9,6 +9,7 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/mongoose";
+import { Request } from "express";
 import { Model } from "mongoose";
 import { User } from "src/db/schemas/user.schema";
 import { hashPassword, verifyPassword } from "src/utils/auth";
@@ -112,5 +113,11 @@ export class AuthService {
         (error as Error).message,
       );
     }
+  }
+
+  async logout(logoutDetails: Request["user"]) {
+    if (!logoutDetails) throw new UnauthorizedException("Invalid credentials");
+
+    await this.cacheManager.del(`jwt-token-${logoutDetails.id}`);
   }
 }

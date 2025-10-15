@@ -18,9 +18,6 @@ const LoginReqDtoSchema = SignupReqDtoSchema.pick({
 );
 export class LoginReqDto extends createZodDto(LoginReqDtoSchema) {}
 
-export const LoginResDtoSchema = SignupResDtoSchema.pick({
-  accessToken: true,
-  statusCode: true,
-});
+export const LoginResDtoSchema = SignupResDtoSchema;
 
 export class LoginResDto extends createZodDto(LoginResDtoSchema) {}
