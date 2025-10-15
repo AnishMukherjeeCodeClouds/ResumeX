@@ -1,5 +1,7 @@
 import { NestFactory } from "@nestjs/core";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
+import { cleanupOpenApiDoc } from "nestjs-zod";
 import { AppConfig } from "./app.config";
 import { AppModule } from "./app.module";
 import { ThrottlerExceptionFilter } from "./filters/throttler-exception.filter";
@@ -11,8 +13,6 @@ async function bootstrap() {
   // Security for common vulnerabilities
   app.use(helmet());
 
-  const appConfig = app.get(AppConfig);
-
   app.useGlobalFilters(
     // Global filter for ZodValidationException (Dto validation errors)
     new ZodValidationExceptionFilter(),
@@ -20,6 +20,21 @@ async function bootstrap() {
     // Global filter for ThrottlerException (Rate limiting errors)
     new ThrottlerExceptionFilter(),
   );
+
+  // Swagger documentation
+  const config = new DocumentBuilder()
+    .setTitle("ResumeX")
+    .setDescription(
+      "Documentation for ResumeX: The professional Resume Builder",
+    )
+    .setVersion("1.0.0")
+    .addBearerAuth()
+    .build();
+
+  const swaggerDocument = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup("api", app, cleanupOpenApiDoc(swaggerDocument));
+
+  const appConfig = app.get(AppConfig);
   await app.listen(appConfig.port);
 }
 void bootstrap();
