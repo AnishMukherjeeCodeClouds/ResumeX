@@ -60,6 +60,7 @@ export class SignupReqDto extends createZodDto(SignupReqDtoSchema) {}
 export const SignupResDtoSchema = z.object({
   message: z.string(),
   accessToken: z.jwt(),
+  refreshToken: z.jwt(),
   statusCode: z.enum(HttpStatus),
 });
 

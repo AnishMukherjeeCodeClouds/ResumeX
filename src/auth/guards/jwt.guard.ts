@@ -38,7 +38,13 @@ export class JwtGuard implements CanActivate {
 
   private async _decodeToken(token: string) {
     try {
-      const payload: { id: string } = await this.jwtService.verifyAsync(token);
+      const payload: { id: string; isRefresh?: boolean } =
+        await this.jwtService.verifyAsync(token);
+
+      // Reject refresh tokens
+      if (payload.isRefresh)
+        throw new UnauthorizedException("Invalid Credentials");
+
       return payload;
     } catch {
       throw new UnauthorizedException("Invalid Credentials");
@@ -55,12 +61,12 @@ export class JwtGuard implements CanActivate {
     // Get the payload from the jwt token
     const { id: userId } = await this._decodeToken(token);
 
-    // Check if the token is the same token in the cache
-    const tokenInCache: string | undefined = await this.cacheManager.get(
-      `jwt-token-${userId}`,
-    );
-    if (!tokenInCache || tokenInCache !== token)
-      throw new UnauthorizedException("Invalid Credentials");
+    // // Check if the token is the same token in the cache
+    // const tokenInCache: string | undefined = await this.cacheManager.get(
+    //   `jwt-token-${userId}`,
+    // );
+    // if (!tokenInCache || tokenInCache !== token)
+    //   throw new UnauthorizedException("Invalid Credentials");
 
     // Set the decoded id on request for later use in controllers
     request.user = { id: userId };

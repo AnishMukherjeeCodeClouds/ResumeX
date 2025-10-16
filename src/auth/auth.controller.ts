@@ -1,19 +1,9 @@
-import {
-  Body,
-  Controller,
-  HttpStatus,
-  Post,
-  Req,
-  UseGuards,
-} from "@nestjs/common";
-import { ApiBearerAuth } from "@nestjs/swagger";
-import { type Request } from "express";
+import { Body, Controller, HttpStatus, Post } from "@nestjs/common";
 import { ZodResponse } from "nestjs-zod";
 import { AuthService } from "./auth.service";
 import { LoginReqDto, LoginResDto } from "./dtos/LoginDto";
-import { LogoutDto } from "./dtos/LogoutDto";
+import { RefreshReqDto, RefreshResDto } from "./dtos/RefreshDto";
 import { SignupReqDto, SignupResDto } from "./dtos/SignupDto";
-import { JwtGuard } from "./guards/jwt.guard";
 
 @Controller("auth")
 export class AuthController {
@@ -26,10 +16,12 @@ export class AuthController {
     status: HttpStatus.CREATED,
   })
   async signup(@Body() signupReqDto: SignupReqDto) {
-    const accessToken = await this.authService.signup(signupReqDto);
+    const { accessToken, refreshToken } =
+      await this.authService.signup(signupReqDto);
     return {
       message: "Signed up successfully",
       accessToken,
+      refreshToken,
       statusCode: HttpStatus.CREATED,
     };
   }
@@ -41,26 +33,29 @@ export class AuthController {
     status: HttpStatus.OK,
   })
   async login(@Body() loginReqDto: LoginReqDto) {
-    const accessToken = await this.authService.login(loginReqDto);
+    const { accessToken, refreshToken } =
+      await this.authService.login(loginReqDto);
     return {
       message: "Logged in successfully",
       accessToken,
+      refreshToken,
       statusCode: HttpStatus.OK,
     };
   }
 
-  @ApiBearerAuth()
-  @Post("logout")
-  @UseGuards(JwtGuard)
+  @Post("refresh")
   @ZodResponse({
-    type: LogoutDto,
-    description: "Log out of current session",
+    type: RefreshResDto,
+    description: "Generate a new access token with using a refresh token",
     status: HttpStatus.OK,
   })
-  async logout(@Req() request: Request) {
-    await this.authService.logout(request.user);
+  async refresh(@Body() refreshReqDto: RefreshReqDto) {
+    const { newAccessToken, newRefreshToken } =
+      await this.authService.refresh(refreshReqDto);
     return {
-      message: "",
+      message: "Generated new access token",
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
       statusCode: HttpStatus.OK,
     };
   }

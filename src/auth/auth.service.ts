@@ -14,6 +14,7 @@ import { Model } from "mongoose";
 import { User } from "src/db/schemas/user.schema";
 import { hashPassword, verifyPassword } from "src/utils/auth";
 import { LoginReqDto } from "./dtos/LoginDto";
+import { RefreshReqDto } from "./dtos/RefreshDto";
 import { SignupReqDto } from "./dtos/SignupDto";
 
 @Injectable()
@@ -35,14 +36,16 @@ export class AuthService {
     return newUser._id;
   }
 
-  private async _generateToken(id: string) {
-    // new user objectid as jwt payload
-    const token = await this.jwtService.signAsync(
-      { id },
-      { subject: id, expiresIn: "1d" },
-    );
-
-    await this.cacheManager.set(`jwt-token-${id}`, token, 86400 * 1000); // 1 day
+  private async _generateToken<T extends Record<string, unknown>>({
+    payload,
+    expiresIn,
+  }: {
+    payload: T;
+    expiresIn: `${number}${"s" | "m" | "h" | "d"}`;
+  }) {
+    const token = await this.jwtService.signAsync(payload, {
+      expiresIn,
+    });
 
     return token;
   }
@@ -63,7 +66,23 @@ export class AuthService {
         throw new ConflictException("Similar user already exists");
 
       const newId = await this._createUser(signupDetails);
-      return await this._generateToken(newId.toString());
+      const [accessToken, refreshToken] = await Promise.all([
+        this._generateToken({
+          payload: { id: newId.toString() },
+          expiresIn: "30m",
+        }),
+        this._generateToken({
+          payload: { id: newId._id.toString(), isRefresh: true },
+          expiresIn: "7d",
+        }),
+      ]);
+
+      await this.cacheManager.set(
+        `refresh-token-${newId.toString()}`,
+        refreshToken,
+      );
+
+      return { accessToken, refreshToken };
     } catch (error) {
       // Rethrow known exceptions
       [ConflictException].some((e) => {
@@ -100,7 +119,23 @@ export class AuthService {
       if (!isPasswordValid)
         throw new UnauthorizedException("Invalid user credentials");
 
-      return await this._generateToken(existingUser._id.toString());
+      const [accessToken, refreshToken] = await Promise.all([
+        this._generateToken({
+          payload: { id: existingUser._id.toString() },
+          expiresIn: "30m",
+        }),
+        this._generateToken({
+          payload: { id: existingUser._id.toString(), isRefresh: true },
+          expiresIn: "7d",
+        }),
+      ]);
+
+      await this.cacheManager.set(
+        `refresh-token-${existingUser._id.toString()}`,
+        refreshToken,
+      );
+
+      return { accessToken, refreshToken };
     } catch (error) {
       // Rethrow known exceptions
       [NotFoundException, UnauthorizedException].some((e) => {
@@ -116,8 +151,52 @@ export class AuthService {
   }
 
   async logout(logoutDetails: Request["user"]) {
-    if (!logoutDetails) throw new UnauthorizedException("Invalid credentials");
+    if (!logoutDetails) throw new UnauthorizedException("Invalid Credentials");
 
     await this.cacheManager.del(`jwt-token-${logoutDetails.id}`);
+  }
+
+  async refresh({ refreshToken }: RefreshReqDto) {
+    try {
+      // Verify refresh token
+      const refreshPayload: { id: string; isRefresh?: boolean } =
+        await this.jwtService.verifyAsync(refreshToken);
+
+      // Reject access tokens
+      if (!refreshPayload.isRefresh)
+        throw new UnauthorizedException("Invalid Credentials");
+
+      // Check if the refresh token same as the one in cache
+      if (
+        !(
+          (await this.cacheManager.get(
+            `refresh-token-${refreshPayload.id}`,
+          )) === refreshToken
+        )
+      )
+        throw new UnauthorizedException("Invalid Credentials");
+
+      // Generate new access and refresh tokens
+      const [newAccessToken, newRefreshToken] = await Promise.all([
+        this._generateToken({
+          payload: { id: refreshPayload.id },
+          expiresIn: "30m",
+        }),
+        this._generateToken({
+          payload: { id: refreshPayload.id, isRefresh: true },
+          expiresIn: "7d",
+        }),
+      ]);
+
+      await this.cacheManager.set(
+        `refresh-token-${refreshPayload.id}`,
+        newRefreshToken,
+      );
+
+      return { newAccessToken, newRefreshToken };
+    } catch (error) {
+      console.log(error);
+      throw new UnauthorizedException("Invalid Credentials");
+    }
   }
 }
