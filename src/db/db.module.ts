@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { DbConfig } from "./db.config";
+import { Resume, ResumeSchema } from "./schemas/resume.schema";
 import { User, UserSchema } from "./schemas/user.schema";
 
 @Module({
@@ -19,6 +20,10 @@ import { User, UserSchema } from "./schemas/user.schema";
       {
         name: User.name,
         schema: UserSchema,
+      },
+      {
+        name: Resume.name,
+        schema: ResumeSchema,
       },
     ]),
   ],
