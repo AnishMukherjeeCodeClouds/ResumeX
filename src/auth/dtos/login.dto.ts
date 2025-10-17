@@ -1,5 +1,5 @@
 import { createZodDto } from "nestjs-zod";
-import { SignupReqDtoSchema, SignupResDtoSchema } from "./SignupDto";
+import { SignupReqDtoSchema, SignupResDtoSchema } from "./signup.dto";
 
 const LoginReqDtoSchema = SignupReqDtoSchema.pick({
   username: true,

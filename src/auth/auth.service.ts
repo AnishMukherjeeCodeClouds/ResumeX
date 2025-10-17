@@ -11,11 +11,11 @@ import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/mongoose";
 import { Request } from "express";
 import { Model } from "mongoose";
+import { hashPassword, verifyPassword } from "src/auth/utils";
 import { User } from "src/db/schemas/user.schema";
-import { hashPassword, verifyPassword } from "src/utils/auth";
-import { LoginReqDto } from "./dtos/LoginDto";
-import { RefreshReqDto } from "./dtos/RefreshDto";
-import { SignupReqDto } from "./dtos/SignupDto";
+import { LoginReqDto } from "./dtos/login.dto";
+import { RefreshReqDto } from "./dtos/refresh.dto";
+import { SignupReqDto } from "./dtos/signup.dto";
 
 @Injectable()
 export class AuthService {
@@ -24,31 +24,6 @@ export class AuthService {
     private jwtService: JwtService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
-
-  private async _createUser(userDetails: SignupReqDto) {
-    const newUser = await this.userModel.create({
-      name: userDetails.name,
-      email: userDetails.email,
-      username: userDetails.username,
-      password: await hashPassword(userDetails.password),
-    });
-
-    return newUser._id;
-  }
-
-  private async _generateToken<T extends Record<string, unknown>>({
-    payload,
-    expiresIn,
-  }: {
-    payload: T;
-    expiresIn: `${number}${"s" | "m" | "h" | "d"}`;
-  }) {
-    const token = await this.jwtService.signAsync(payload, {
-      expiresIn,
-    });
-
-    return token;
-  }
 
   async signup(signupDetails: SignupReqDto) {
     try {
@@ -198,5 +173,30 @@ export class AuthService {
       console.log(error);
       throw new UnauthorizedException("Invalid Credentials");
     }
+  }
+
+  private async _createUser(userDetails: SignupReqDto) {
+    const newUser = await this.userModel.create({
+      name: userDetails.name,
+      email: userDetails.email,
+      username: userDetails.username,
+      password: await hashPassword(userDetails.password),
+    });
+
+    return newUser._id;
+  }
+
+  private async _generateToken<T extends Record<string, unknown>>({
+    payload,
+    expiresIn,
+  }: {
+    payload: T;
+    expiresIn: `${number}${"s" | "m" | "h" | "d"}`;
+  }) {
+    const token = await this.jwtService.signAsync(payload, {
+      expiresIn,
+    });
+
+    return token;
   }
 }

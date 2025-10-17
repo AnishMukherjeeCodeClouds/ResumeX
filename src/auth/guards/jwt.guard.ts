@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
+import mongoose from "mongoose";
 import z from "zod";
 
 @Injectable()
@@ -16,6 +17,28 @@ export class JwtGuard implements CanActivate {
     private jwtService: JwtService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
+
+  async canActivate(context: ExecutionContext) {
+    // Get hold of the incoming request object
+    const request = context.switchToHttp().getRequest<Request>();
+
+    // Get the token from the authorization header
+    const token = this._extractToken(request);
+
+    // Get the payload from the jwt token
+    const { id: userId } = await this._decodeToken(token);
+
+    // // Check if the token is the same token in the cache
+    // const tokenInCache: string | undefined = await this.cacheManager.get(
+    //   `jwt-token-${userId}`,
+    // );
+    // if (!tokenInCache || tokenInCache !== token)
+    //   throw new UnauthorizedException("Invalid Credentials");
+
+    // Set the decoded id on request for later use in controllers
+    request.user = { id: userId };
+    return true;
+  }
 
   private _extractToken(request: Request) {
     // No authorization header
@@ -45,31 +68,13 @@ export class JwtGuard implements CanActivate {
       if (payload.isRefresh)
         throw new UnauthorizedException("Invalid Credentials");
 
+      // If id is not a mongodb id
+      if (!mongoose.Types.ObjectId.isValid(payload.id))
+        throw new UnauthorizedException("Invalid Credentials");
+
       return payload;
     } catch {
       throw new UnauthorizedException("Invalid Credentials");
     }
-  }
-
-  async canActivate(context: ExecutionContext) {
-    // Get hold of the incoming request object
-    const request = context.switchToHttp().getRequest<Request>();
-
-    // Get the token from the authorization header
-    const token = this._extractToken(request);
-
-    // Get the payload from the jwt token
-    const { id: userId } = await this._decodeToken(token);
-
-    // // Check if the token is the same token in the cache
-    // const tokenInCache: string | undefined = await this.cacheManager.get(
-    //   `jwt-token-${userId}`,
-    // );
-    // if (!tokenInCache || tokenInCache !== token)
-    //   throw new UnauthorizedException("Invalid Credentials");
-
-    // Set the decoded id on request for later use in controllers
-    request.user = { id: userId };
-    return true;
   }
 }

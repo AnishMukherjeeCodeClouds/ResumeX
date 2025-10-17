@@ -1,9 +1,9 @@
 import { Body, Controller, HttpStatus, Post } from "@nestjs/common";
 import { ZodResponse } from "nestjs-zod";
 import { AuthService } from "./auth.service";
-import { LoginReqDto, LoginResDto } from "./dtos/LoginDto";
-import { RefreshReqDto, RefreshResDto } from "./dtos/RefreshDto";
-import { SignupReqDto, SignupResDto } from "./dtos/SignupDto";
+import { LoginReqDto, LoginResDto } from "./dtos/login.dto";
+import { RefreshReqDto, RefreshResDto } from "./dtos/refresh.dto";
+import { SignupReqDto, SignupResDto } from "./dtos/signup.dto";
 
 @Controller("auth")
 export class AuthController {
