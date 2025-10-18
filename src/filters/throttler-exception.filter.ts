@@ -7,11 +7,10 @@ import {
 } from "@nestjs/common";
 import { ThrottlerException } from "@nestjs/throttler";
 import { Response } from "express";
-import { ZodValidationExceptionFilter } from "./zod-validation-exception.filter";
 
 @Catch(ThrottlerException)
 export class ThrottlerExceptionFilter implements ExceptionFilter {
-  private logger = new Logger(ZodValidationExceptionFilter.name);
+  private logger = new Logger(ThrottlerExceptionFilter.name);
 
   catch(_, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<Response>();

@@ -1,22 +1,27 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { type Request } from "express";
-import { ZodResponse } from "nestjs-zod";
+import { ZodResponse, ZodValidationPipe } from "nestjs-zod";
 import { JwtGuard } from "src/auth/guards/jwt.guard";
 import {
   CreateResumeReqDto,
   CreateResumeResDto,
 } from "./dtos/create-resume.dto";
 import { GetAllResumesResDto } from "./dtos/get-all-resumes.dto";
+import { IdRequestDtoSchema } from "./dtos/id-request.dto";
+import { UpdateResumeReqDto } from "./dtos/update-resume.dto";
 import { ResumeService } from "./resume.service";
 
 @ApiBearerAuth()
@@ -41,11 +46,21 @@ export class ResumeController {
   }
 
   @Get(":id")
-  getResume(@Param("id") resumeId: string) {
-    this.resumeService.fetchResume(resumeId);
+  @HttpCode(HttpStatus.OK)
+  async getResume(
+    @Req() req: Request,
+    @Param("id", new ZodValidationPipe(IdRequestDtoSchema))
+    resumeId: string,
+  ) {
+    const resumeData = await this.resumeService.fetchResume(
+      req.user!.id,
+      resumeId,
+    );
 
     return {
-      hello: "world",
+      message: "Fetched resume successfully",
+      resumeData,
+      statusCode: HttpStatus.OK,
     };
   }
 
@@ -66,7 +81,31 @@ export class ResumeController {
     };
   }
 
-  updateResume() {}
+  @Patch("edit/:id")
+  @HttpCode(HttpStatus.OK)
+  async editResume(
+    @Req() req: Request,
+    @Param("id", new ZodValidationPipe(IdRequestDtoSchema)) resumeId: string,
+    @Body() updateResumeReqDto: UpdateResumeReqDto,
+  ) {
+    await this.resumeService.editResume(
+      req.user!.id,
+      resumeId,
+      updateResumeReqDto,
+    );
 
-  deleteResume() {}
+    return {
+      message: "Updated resume successfully",
+      statusCode: HttpStatus.OK,
+    };
+  }
+
+  @Delete("delete/:id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteResume(
+    @Req() req: Request,
+    @Param("id", new ZodValidationPipe(IdRequestDtoSchema)) resumeId: string,
+  ) {
+    await this.resumeService.deleteResume(req.user!.id, resumeId);
+  }
 }

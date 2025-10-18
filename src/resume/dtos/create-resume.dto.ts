@@ -12,6 +12,8 @@ function dateRefine<T extends { startDate: Date; endDate?: Date }>(data: T) {
   return true;
 }
 
+const DateSchema = (error?: string) => z.iso.date(error).pipe(z.coerce.date());
+
 const PersonalDetailsSchema = z.object(
   {
     fullName: z.string("Full name is required"),
@@ -27,7 +29,6 @@ const PersonalDetailsSchema = z.object(
 
 const SocialsSchema = z.object({
   linkedIn: z
-    .string()
     .url("Invalid LinkedIn URL")
     .regex(
       /^https:\/\/(www\.)?linkedin\.com\/in\/[A-Za-z0-9_-]+\/?$/,
@@ -36,7 +37,6 @@ const SocialsSchema = z.object({
     .optional(),
 
   X: z
-    .string()
     .url("Invalid X (Twitter) URL")
     .regex(
       /^https:\/\/(www\.)?(x\.com|twitter\.com)\/[A-Za-z0-9_]+\/?$/,
@@ -45,7 +45,6 @@ const SocialsSchema = z.object({
     .optional(),
 
   github: z
-    .string()
     .url("Invalid GitHub URL")
     .regex(
       /^https:\/\/(www\.)?github\.com\/[A-Za-z0-9_-]+\/?$/,
@@ -53,17 +52,19 @@ const SocialsSchema = z.object({
     )
     .optional(),
 
-  portfolio: z.string().url("Invalid portfolio URL").optional(),
+  portfolio: z.url("Invalid portfolio URL").optional(),
 });
 
 const ExperienceSchema = z
   .object({
     organization: z.string("Organization name is required"),
     position: z.string("Experience position is required"),
-    startDate: z
-      .string("Experience start date is required")
-      .pipe(z.coerce.date()),
-    endDate: z.string().pipe(z.coerce.date()).optional(),
+    startDate: DateSchema("Experience start date is required"),
+    // startDate: z.iso
+    //   .date("Experience start date is required")
+    //   .pipe(z.coerce.date()),
+    // endDate: z.iso.date().pipe(z.coerce.date()).optional(),
+    endDate: DateSchema().optional(),
     description: z.string().optional(),
   })
   .refine(dateRefine, "Invalid experience dates");
@@ -72,10 +73,12 @@ const EducationSchema = z
   .object({
     institution: z.string("Institution is required"),
     description: z.string("Education description is required"),
-    startDate: z
-      .string("Education start date is required")
-      .pipe(z.coerce.date()),
-    endDate: z.string().pipe(z.coerce.date()).optional(),
+    startDate: DateSchema("Education start date is required"),
+    // startDate: z.iso
+    //   .date("Education start date is required")
+    //   .pipe(z.coerce.date()),
+    // endDate: z.iso.date().pipe(z.coerce.date()).optional(),
+    endDate: DateSchema().optional(),
   })
   .refine(dateRefine, "Invalid education dates");
 
@@ -95,8 +98,12 @@ const ProjectSchema = z
       .nonempty("At least one project technology is required"),
     liveLink: z.url().optional(),
     githubLink: z.url().regex(new RegExp("https://github.com/*")).optional(),
-    startDate: z.string("Project start date is required").pipe(z.coerce.date()),
-    endDate: z.string().pipe(z.coerce.date()).optional(),
+    startDate: DateSchema("Project start date is required"),
+    // startDate: z.iso
+    //   .date("Project start date is required")
+    //   .pipe(z.coerce.date()),
+    // endDate: z.iso.date().pipe(z.coerce.date()).optional(),
+    endDate: DateSchema().optional(),
   })
   .refine(dateRefine, "Invalid project dates");
 
@@ -104,7 +111,8 @@ const CertificationSchema = z
   .object({
     title: z.string("Certification title is required"),
     issuer: z.string("Certification issuer is required"),
-    date: z.string("Certification date is required").pipe(z.coerce.date()),
+    date: DateSchema("Certification date is required"),
+    // date: z.iso.date("Certification date is required").pipe(z.coerce.date()),
     url: z.url("Certification url is required"),
   })
   .refine((data) => data.date <= new Date(), "Invalid certification date");
