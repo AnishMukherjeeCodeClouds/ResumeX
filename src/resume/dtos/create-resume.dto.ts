@@ -97,7 +97,13 @@ const ProjectSchema = z
       .array(z.string(), "Project technologies are required")
       .nonempty("At least one project technology is required"),
     liveLink: z.url().optional(),
-    githubLink: z.url().regex(new RegExp("https://github.com/*")).optional(),
+    githubLink: z
+      .url()
+      .regex(
+        /^https:\/\/(www\.)?github\.com\/[A-Za-z0-9_-]+\/?$/,
+        "Invalid GitHub profile URL",
+      )
+      .optional(),
     startDate: DateSchema("Project start date is required"),
     // startDate: z.iso
     //   .date("Project start date is required")
