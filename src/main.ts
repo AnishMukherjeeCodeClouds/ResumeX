@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import { cleanupOpenApiDoc } from "nestjs-zod";
 import { AppConfig } from "./app.config";
@@ -9,6 +10,9 @@ import { ZodValidationExceptionFilter } from "./filters/zod-validation-exception
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // For handling cookies
+  app.use(cookieParser());
 
   // Security for common vulnerabilities
   app.use(helmet());

@@ -37,19 +37,18 @@ export class JwtGuard implements CanActivate {
 
     // Set the decoded id on request for later use in controllers
     request.user = { id: userId };
+
     return true;
   }
 
   private _extractToken(request: Request) {
-    // No authorization header
-    const authorizationHeader = request.headers.authorization;
-    if (!authorizationHeader)
+    // No cookies
+    const cookies = request.cookies;
+    if (!("access-token" in cookies))
       throw new UnauthorizedException("Invalid Credentials");
 
-    // No token
-    const [scheme, token] = authorizationHeader.split(" ");
-    if (!token || scheme.toLowerCase() !== "bearer")
-      throw new UnauthorizedException("Invalid Credentials");
+    const token = cookies["access-token"] as string | null;
+    if (!token) throw new UnauthorizedException("Invalid Credentials");
 
     // Invalid string instead of valid jwt format
     const parseResult = z.jwt().safeParse(token);

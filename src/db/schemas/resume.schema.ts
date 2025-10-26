@@ -6,20 +6,20 @@ import mongoose, { HydratedDocument } from "mongoose";
 class PersonalDetails {
   @Prop({ required: true })
   fullName: string;
+  @Prop({ required: true })
+  designation: string;
   @Prop({ required: true, lowercase: true, trim: true })
   email: string;
   @Prop()
   phone?: string;
   @Prop()
-  address?: string;
+  location?: string;
 }
 
 @Schema({ _id: false })
 class Socials {
   @Prop()
   linkedIn?: string;
-  @Prop()
-  twitter?: string;
   @Prop()
   github?: string;
   @Prop()
@@ -36,28 +36,24 @@ class Experience {
   startDate: Date;
   @Prop({ type: Date })
   endDate?: Date;
-  @Prop()
-  description?: string;
+  @Prop({ required: true })
+  description: string;
 }
 
 @Schema({ _id: false })
 class Education {
   @Prop({ required: true })
   institution: string;
+  @Prop({ required: true })
+  degree: string;
+  @Prop()
+  field: string;
   @Prop({ type: Date, required: true })
   startDate: Date;
   @Prop({ type: Date })
   endDate?: Date;
-  @Prop({ required: true })
-  description: string;
-}
-
-@Schema({ _id: false })
-class Skill {
-  @Prop({ required: true })
-  name: string;
-  @Prop({ type: [String], required: true })
-  keywords?: string[];
+  @Prop()
+  grade?: string;
 }
 
 @Schema({ _id: false })
@@ -94,7 +90,6 @@ const PersonalDetailsSchema = SchemaFactory.createForClass(PersonalDetails);
 const SocialsSchema = SchemaFactory.createForClass(Socials);
 const ExperienceSchema = SchemaFactory.createForClass(Experience);
 const EducationSchema = SchemaFactory.createForClass(Education);
-const SkillSchema = SchemaFactory.createForClass(Skill);
 const ProjectSchema = SchemaFactory.createForClass(Project);
 const CertificationSchema = SchemaFactory.createForClass(Certification);
 
@@ -162,14 +157,23 @@ export class Resume {
   @Prop({ type: [EducationSchema], default: [] })
   educations?: Education[];
 
-  @Prop({ type: [SkillSchema], default: [] })
-  skills: Skill[];
+  @Prop({ type: [String], default: [] })
+  skills: string[];
 
   @Prop({ type: [ProjectSchema], default: [] })
   projects?: Project[];
 
   @Prop({ type: [CertificationSchema], default: [] })
   certifications?: Certification[];
+
+  @Prop({ type: [String], default: [] })
+  languages: string[];
+
+  @Prop({ type: String, required: true })
+  accentColor: string;
+
+  @Prop({ type: String, required: true })
+  template: string;
 }
 
 export const ResumeSchema = SchemaFactory.createForClass(Resume);
