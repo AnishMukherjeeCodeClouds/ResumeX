@@ -162,9 +162,24 @@ export class AuthService {
       );
 
       return { newAccessToken, newRefreshToken };
-    } catch (error) {
-      console.log(error);
+    } catch {
       throw new UnauthorizedException("Invalid Credentials");
+    }
+  }
+
+  async getUserDetails(userId: string) {
+    try {
+      const targetUser = await this.userModel.findOne({ _id: userId });
+      if (!targetUser) throw new NotFoundException("Invalid user credentials");
+
+      return targetUser;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+
+      throw new BadRequestException(
+        "Error While Fetching User Details",
+        (error as Error).message,
+      );
     }
   }
 

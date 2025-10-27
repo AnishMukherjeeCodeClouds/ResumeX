@@ -19,7 +19,6 @@ import {
   CreateResumeReqDto,
   CreateResumeResDto,
 } from "./dtos/create-resume.dto";
-import { GetAllResumesResDto } from "./dtos/get-all-resumes.dto";
 import { IdRequestDtoSchema } from "./dtos/id-request.dto";
 import { UpdateResumeReqDto } from "./dtos/update-resume.dto";
 import { ResumeService } from "./resume.service";
@@ -30,17 +29,16 @@ import { ResumeService } from "./resume.service";
 export class ResumeController {
   constructor(private resumeService: ResumeService) {}
 
-  @Get("all")
-  @ZodResponse({
-    type: GetAllResumesResDto,
-    description: "Get all resumes for the current user",
-    status: HttpStatus.OK,
-  })
-  async getAllResumes(@Req() req: Request) {
-    const allResumes = await this.resumeService.fetchAllResumes(req.user!.id);
+  @Get("/all")
+  @HttpCode(HttpStatus.OK)
+  async getAllResumeInitialData(@Req() req: Request) {
+    const resumeData = await this.resumeService.fetchAllResumeInitialData(
+      req.user!.id,
+    );
+
     return {
-      message: "Fetched all resumes for the current user successfully",
-      resumes: allResumes,
+      message: "Fetched Initial Data For All Resume Successfully",
+      resumes: resumeData,
       statusCode: HttpStatus.OK,
     };
   }

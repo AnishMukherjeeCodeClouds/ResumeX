@@ -1,9 +1,20 @@
-import { Body, Controller, HttpStatus, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from "@nestjs/common";
+import type { Request } from "express";
 import { ZodResponse } from "nestjs-zod";
 import { AuthService } from "./auth.service";
 import { LoginReqDto, LoginResDto } from "./dtos/login.dto";
+import { MeResDto } from "./dtos/me.dto";
 import { RefreshReqDto, RefreshResDto } from "./dtos/refresh.dto";
 import { SignupReqDto, SignupResDto } from "./dtos/signup.dto";
+import { JwtGuard } from "./guards/jwt.guard";
 
 @Controller("auth")
 export class AuthController {
@@ -56,6 +67,24 @@ export class AuthController {
       message: "Generated new access token",
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
+      statusCode: HttpStatus.OK,
+    };
+  }
+
+  @UseGuards(JwtGuard)
+  @ZodResponse({
+    type: MeResDto,
+    description: "Get details of the currently authenticated user",
+    status: HttpStatus.OK,
+  })
+  @Get("me")
+  async getUserDetails(@Req() req: Request) {
+    const { _id, name, email } = await this.authService.getUserDetails(
+      req.user!.id,
+    );
+    return {
+      message: "Fetched user details successfully",
+      userDetails: { id: _id.toString(), name, email },
       statusCode: HttpStatus.OK,
     };
   }

@@ -13,11 +13,21 @@ import { UpdateResumeReqDto } from "./dtos/update-resume.dto";
 export class ResumeService {
   constructor(@InjectModel(Resume.name) private resumeModel: Model<Resume>) {}
 
-  async fetchAllResumes(userId: string) {
+  async fetchAllResumeInitialData(userId: string) {
     try {
-      return await this.resumeModel.find({
-        userId,
-      });
+      return (
+        await this.resumeModel.find(
+          {
+            userId,
+          },
+          { _id: true, title: true, template: true, createdAt: true },
+        )
+      ).map(({ _id, title, template, createdAt }) => ({
+        id: _id.toString(),
+        title,
+        template,
+        createdAt,
+      }));
     } catch (error) {
       throw new BadRequestException((error as Error).message);
     }

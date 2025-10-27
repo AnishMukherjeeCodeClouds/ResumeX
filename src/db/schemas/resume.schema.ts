@@ -174,6 +174,9 @@ export class Resume {
 
   @Prop({ type: String, required: true })
   template: string;
+
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export const ResumeSchema = SchemaFactory.createForClass(Resume);

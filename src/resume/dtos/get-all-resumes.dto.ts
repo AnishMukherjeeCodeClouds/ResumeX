@@ -5,12 +5,12 @@ import z from "zod";
 const GetAllResumesResDtoSchema = z.object({
   message: z.string(),
   resumes: z.array(
-    z.any(),
-    // z.object({
-    //   _id: z.string(),
-    //   userId: z.string(),
-    //   ...CreateResumeReqDtoSchema.shape,
-    // }),
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      template: z.string(),
+      createdAt: z.date().transform((val) => val.toDateString()),
+    }),
   ),
   statusCode: z.enum(HttpStatus),
 });

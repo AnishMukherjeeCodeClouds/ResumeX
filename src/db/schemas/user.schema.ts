@@ -11,6 +11,9 @@ export class User {
   email: string;
   @Prop({ required: true })
   password: string;
+
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export type UserDocument = HydratedDocument<User>;
