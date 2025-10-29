@@ -10,19 +10,28 @@ export const MAX_SKILLS = 8;
 export const MAX_CERTIFICATIONS = 2;
 export const MAX_LANGUAGES = 5;
 
-function dateRefine<T extends { startDate: Date; endDate?: Date }>(data: T) {
-  const today = new Date();
-  if (data.startDate > today) return false;
+function dateRefine<T extends { startDate: string; endDate?: string }>(
+  data: T,
+) {
+  try {
+    const startDate = new Date(data.startDate);
+    const endDate = data.endDate ? new Date(data.endDate) : undefined;
 
-  if (data.endDate) {
-    return data.startDate <= data.endDate && data.endDate <= new Date();
+    const today = new Date();
+    if (startDate > today) return false;
+
+    if (endDate) {
+      return startDate <= endDate && endDate <= new Date();
+    }
+    return true;
+  } catch {
+    return false;
   }
-  return true;
 }
 
-const DateSchema = (error?: string) => z.iso.date(error).pipe(z.coerce.date());
+const DateSchema = (error?: string) => z.string(error);
 
-const PersonalDetailsSchema = z.object(
+export const PersonalDetailsSchema = z.object(
   {
     fullName: z
       .string("Full name is required")
@@ -40,7 +49,7 @@ const PersonalDetailsSchema = z.object(
   "Personal details are required",
 );
 
-const SocialsSchema = z.object({
+export const SocialsSchema = z.object({
   linkedIn: z
     .url("Invalid LinkedIn URL")
     .regex(
@@ -60,7 +69,7 @@ const SocialsSchema = z.object({
   portfolio: z.url("Invalid portfolio URL").optional(),
 });
 
-const ExperienceSchema = z
+export const ExperienceSchema = z
   .object({
     organization: z
       .string("Organization name is required")
@@ -76,7 +85,7 @@ const ExperienceSchema = z
   })
   .refine(dateRefine, "Invalid experience dates");
 
-const EducationSchema = z
+export const EducationSchema = z
   .object({
     institution: z
       .string("Institution is required")
@@ -91,7 +100,7 @@ const EducationSchema = z
   })
   .refine(dateRefine, "Invalid education dates");
 
-const ProjectSchema = z
+export const ProjectSchema = z
   .object({
     name: z
       .string("Project name is required")
@@ -116,7 +125,7 @@ const ProjectSchema = z
   })
   .refine(dateRefine, "Invalid project dates");
 
-const CertificationSchema = z
+export const CertificationSchema = z
   .object({
     title: z
       .string("Certification title is required")
@@ -127,7 +136,13 @@ const CertificationSchema = z
     date: DateSchema("Certification date is required"),
     url: z.url("Certification url is required"),
   })
-  .refine((data) => data.date <= new Date(), "Invalid certification date");
+  .refine((data) => {
+    try {
+      return new Date(data.date) <= new Date();
+    } catch {
+      return false;
+    }
+  }, "Invalid certification date");
 
 export const CreateResumeReqDtoSchema = z.object({
   title: z

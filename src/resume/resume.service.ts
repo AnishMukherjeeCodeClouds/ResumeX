@@ -7,6 +7,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Resume } from "src/db/schemas/resume.schema";
 import { CreateResumeReqDto } from "./dtos/create-resume.dto";
+import { GetResumeResDataSchema } from "./dtos/get-one-resume.dto";
 import { UpdateResumeReqDto } from "./dtos/update-resume.dto";
 
 @Injectable()
@@ -42,7 +43,7 @@ export class ResumeService {
 
       if (targetResume == null) throw new NotFoundException("Resume not found");
 
-      return targetResume;
+      return GetResumeResDataSchema.parse(targetResume.toObject());
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
 
@@ -69,29 +70,15 @@ export class ResumeService {
     resumeId: string,
     editDetails: UpdateResumeReqDto,
   ) {
-    function flatten<T>(obj: T, prefix = ""): Record<string, any> {
-      const result: Record<string, unknown> = {};
-      for (const key in obj) {
-        if (
-          obj[key] &&
-          typeof obj[key] === "object" &&
-          !Array.isArray(obj[key])
-        ) {
-          Object.assign(result, flatten(obj[key], `${prefix}${key}.`));
-        } else {
-          result[`${prefix}${key}`] = obj[key];
-        }
-      }
-      return result;
-    }
     try {
-      const updateResult = await this.resumeModel.updateOne(
+      console.log(editDetails);
+      const updateResult = await this.resumeModel.findOneAndUpdate(
         { userId, _id: resumeId },
-        { $set: flatten(editDetails) },
+        editDetails,
+        { new: true },
       );
 
-      if (updateResult.matchedCount === 0)
-        throw new NotFoundException("Resume not found");
+      if (!updateResult) throw new NotFoundException("Resume not found");
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
 

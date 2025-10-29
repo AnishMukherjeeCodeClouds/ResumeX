@@ -6,8 +6,8 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  Patch,
   Post,
+  Put,
   Req,
   UseGuards,
 } from "@nestjs/common";
@@ -44,7 +44,6 @@ export class ResumeController {
   }
 
   @Get(":id")
-  @HttpCode(HttpStatus.OK)
   async getResume(
     @Req() req: Request,
     @Param("id", new ZodValidationPipe(IdRequestDtoSchema))
@@ -79,13 +78,14 @@ export class ResumeController {
     };
   }
 
-  @Patch("edit/:id")
+  @Put("edit/:id")
   @HttpCode(HttpStatus.OK)
   async editResume(
     @Req() req: Request,
     @Param("id", new ZodValidationPipe(IdRequestDtoSchema)) resumeId: string,
     @Body() updateResumeReqDto: UpdateResumeReqDto,
   ) {
+    console.log(resumeId);
     await this.resumeService.editResume(
       req.user!.id,
       resumeId,
